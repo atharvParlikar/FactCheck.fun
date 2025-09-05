@@ -16,19 +16,8 @@ export type Trade = {
 export class Positions {
   positions: Map<string, Position>;
 
-  constructor(marketId: string) {
+  constructor() {
     this.positions = new Map();
-    this.positions.set("market", {
-      userId: "market",
-      marketId,
-      yesShares: 10_000
-    });
-
-    this.positions.set("market", {
-      userId: "market",
-      marketId,
-      yesShares: -10_000
-    });
   }
 
   private ensure(userId: string, marketId: string) {
@@ -47,19 +36,52 @@ export class Positions {
     const takerUser = users.get(taker.userId)!;
     const makerUser = users.get(maker.userId)!;
 
-    if (taker.side === "yes") {
-      takerUser.balance -= price * shares;
-      takerPos.yesShares += shares;
+    const isClosingPosition = (currentShares: number, orderSide: "yes" | "no", tradedShares: number) => {
+      if (orderSide === "yes") {
+        return currentShares < 0 && Math.abs(currentShares) >= tradedShares;
+      } else {
+        return currentShares > 0 && currentShares >= tradedShares;
+      }
+    };
 
-      makerUser.balance += price * shares;
-      makerPos.yesShares -= shares;
+    const takerIsClosing = isClosingPosition(takerPos.yesShares, taker.side, shares);
 
+    if (takerIsClosing) {
+      if (taker.side === "yes") {
+        takerUser.balance += price * shares;
+        takerPos.yesShares += shares;
+      } else {
+        takerUser.balance += (1 - price) * shares;
+        takerPos.yesShares -= shares;
+      }
     } else {
-      takerUser.balance -= (1 - price) * shares;
-      takerPos.yesShares -= shares;
+      if (taker.side === "yes") {
+        takerUser.balance -= price * shares;
+        takerPos.yesShares += shares;
+      } else {
+        takerUser.balance -= (1 - price) * shares;
+        takerPos.yesShares -= shares;
+      }
+    }
 
-      makerUser.balance += (1 - price) * shares;
-      makerPos.yesShares += shares;
+    const makerIsClosing = isClosingPosition(makerPos.yesShares, maker.side, shares);
+
+    if (makerIsClosing) {
+      if (maker.side === "yes") {
+        makerUser.balance += price * shares;
+        makerPos.yesShares += shares;
+      } else {
+        makerUser.balance += (1 - price) * shares;
+        makerPos.yesShares -= shares;
+      }
+    } else {
+      if (maker.side === "yes") {
+        makerUser.balance -= price * shares;
+        makerPos.yesShares += shares;
+      } else {
+        makerUser.balance -= (1 - price) * shares;
+        makerPos.yesShares -= shares;
+      }
     }
   }
 
