@@ -11,6 +11,7 @@
   "type": "module",
   "dependencies": {
     "hono": "^4.9.6",
-    "nanoid": "^5.1.5"
+    "nanoid": "^5.1.5",
+    "sorted-btree": "^1.8.1"
   }
 }

@@ -5,7 +5,7 @@ export type Order = {
   userId: string;
   side: "yes" | "no";
   shares: number;
-  limitProbability: number;
+  price: number; // always between 0 and 1 not including 0 and 1.
 }
 
 export type User = {
